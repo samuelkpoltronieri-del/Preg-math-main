@@ -57,15 +57,15 @@ export default function SimuladoPage() {
         <div className="simulado-box-header">
           <h1>Simulado - ENEM</h1>
         </div>
-        
+
         <div className="simulado-box-body">
           <div className="simulado-field">
             <label>Seu nome completo:</label>
-            <input 
+            <input
               className="custom-input"
-              value={name} 
-              onChange={(e) => setName(e.target.value)} 
-              placeholder="Ex: Pedro Henrique Almeida de Pinto Grosso" 
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Ex: Pedro Henrique Almeida de Pinto Grosso"
             />
           </div>
 
@@ -74,10 +74,10 @@ export default function SimuladoPage() {
             <div className="quantity-options">
               <div className="qty-ex">Ex:5-10</div>
               {quantities.map((value) => (
-                <button 
-                  key={value} 
-                  type="button" 
-                  className={`qty-btn ${quantity === value ? 'selected' : ''}`} 
+                <button
+                  key={value}
+                  type="button"
+                  className={`qty-btn ${quantity === value ? 'selected' : ''}`}
                   onClick={() => setQuantity(value)}
                 >
                   {value}
@@ -94,10 +94,10 @@ export default function SimuladoPage() {
                 return (
                   <label key={vest.id} className="vest-checkbox-label">
                     <div className={`custom-checkbox ${isSelected ? 'checked' : ''}`}>
-                      <input 
-                        type="checkbox" 
-                        checked={isSelected} 
-                        onChange={() => handleToggle(vest.id)} 
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => handleToggle(vest.id)}
                       />
                     </div>
                     <img src={vest.icon} alt={vest.label} className="vest-icon" />
@@ -111,7 +111,7 @@ export default function SimuladoPage() {
           <div className="simulado-submit-container">
             <button type="button" className="simulado-submit-btn" onClick={fetchQuestions} disabled={loading}>
               {loading ? 'Carregando...' : 'Iniciar Simulado'}
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{marginLeft: '0.5rem'}}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '0.5rem' }}>
                 <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
                 <polyline points="10 17 15 12 10 7"></polyline>
                 <line x1="15" y1="12" x2="3" y2="12"></line>

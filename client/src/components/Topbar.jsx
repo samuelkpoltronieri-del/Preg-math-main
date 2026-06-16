@@ -22,10 +22,11 @@ export default function Topbar() {
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    document.documentElement.dataset.theme = darkMode ? 'dark' : 'light';
-    localStorage.setItem('pregmath_theme', darkMode ? 'dark' : 'light');
-  }, [darkMode]);
-
+    document.documentElement.dataset.theme = darkMode ? 'dark' : 'light'; //Define o atributo data-theme para controle de tema via CSS
+    localStorage.setItem('pregmath_theme', darkMode ? 'dark' : 'light'); //Armazena a preferência do usuário no localStorage para mudanças entre sessões
+  }, [darkMode]); 
+  //Grava a nova preferência de volta no localStorage. Isso garante que a escolha persista mesmo após recarregar a página.
+  
   const handleThemeSelect = (tipo, tema) => {
     setOpenMenu(null);
     navigate(`/temas?tipo=${encodeURIComponent(tipo)}&tema=${encodeURIComponent(themeSlugs[tema] || tema)}`);

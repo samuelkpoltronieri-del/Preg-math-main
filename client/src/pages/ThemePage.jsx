@@ -50,7 +50,7 @@ const themeDetails = {
   'REGRA DE 3': {
     title: 'Regra de 3',
     dbName: 'Regra de 3',
-    videoId: 'alLifth7gxE',
+    videoId: 'alLifth7gxE', //ids que são os finais da URL do Youtube que são seus indentificadores únicos
     intro: 'Regra de 3 organiza relações proporcionais para encontrar um valor desconhecido. Ela funciona melhor quando você identifica as grandezas antes de montar a conta.',
     blocks: [
       ['O que estudar?', 'Regra de 3 simples, composta, direta e inversa.'],
@@ -81,6 +81,7 @@ export default function ThemePage() {
         const endpoint = tipo
           ? `/busca/questoes-tema/vestibular/${encodeURIComponent(tipo)}/tema/${encodeURIComponent(detail.dbName)}`
           : `/busca/questoes-tema/tema/${encodeURIComponent(detail.dbName)}`;
+          //Se um vestibular específico for selecionado, busca questões daquele vestibular e tema. Caso contrário, busca questões do tema em geral.
         const response = await api.get(endpoint, { params: { page, limit } });
         setItems(Array.isArray(response.data) ? response.data : []);
       } catch (err) {
@@ -100,10 +101,10 @@ export default function ThemePage() {
       {detail.videoId && (
         <div className="floating-video">
           <iframe
-            src={`https://www.youtube.com/embed/${detail.videoId}`}
-            title={`Vídeo sobre ${detail.title}`}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
+            src={`https://www.youtube.com/embed/${detail.videoId}`} //URL de incorporação do YouTube, usando o ID do vídeo
+            title={`Vídeo sobre ${detail.title}`} //Título para acessibilidade
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" //Permissões recomendadas para vídeos incorporados
+            allowFullScreen //Permite que o vídeo seja visto em tela cheia
           />
         </div>
       )}
