@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import './VideoAulasPage.css';
 
+// Lista de temas disponíveis com seus respectivos vídeos
 const groups = [
   {
     title: 'Razão e Proporção',
@@ -42,58 +43,108 @@ const groups = [
 ];
 
 export default function VideoAulasPage() {
+
+  // Controla qual seção de vídeos está aberta
   const [openSection, setOpenSection] = useState(null);
 
+  // Abre ou fecha uma categoria de vídeo
   const toggle = (title) => {
-    setOpenSection(openSection === title ? null : title);
+
+    setOpenSection(
+      openSection === title
+        ? null
+        : title
+    );
   };
 
   return (
     <div className="video-aulas-page">
+
+      {/* Percorre todos os grupos de vídeos */}
       {groups.map((group) => {
-        const isOpen = openSection === group.title;
+
+        // Verifica se o grupo atual está aberto
+        const isOpen =
+          openSection === group.title;
+
         return (
           <section
-            className={`va-section ${isOpen ? 'va-section--open' : ''}`}
+            className={`va-section ${
+              isOpen
+                ? 'va-section--open'
+                : ''
+            }`}
             key={group.title}
           >
+
+            {/* Cabeçalho da categoria */}
             <button
               type="button"
               className="va-header"
               onClick={() => toggle(group.title)}
               aria-expanded={isOpen}
             >
-              <span className="va-header-title">{group.title}</span>
-              <span className="va-header-arrow">{isOpen ? '▲' : '▼'}</span>
+
+              <span className="va-header-title">
+                {group.title}
+              </span>
+
+              {/* Indicador visual de aberto/fechado */}
+              <span className="va-header-arrow">
+                {isOpen ? '▲' : '▼'}
+              </span>
+
             </button>
 
+            {/* Conteúdo exibido apenas quando aberto */}
             {isOpen && (
+
               <div className="va-body">
+
+                {/* Grade contendo os vídeos */}
                 <div className="va-grid">
+
                   {group.videos.map((video) => (
-                    <div className="va-video-card" key={video.id}>
+
+                    <div
+                      className="va-video-card"
+                      key={video.id}
+                    >
+
                       <div className="va-video-wrapper">
+
+                        {/* Vídeo incorporado do YouTube */}
                         <iframe
                           src={`https://www.youtube.com/embed/${video.id}`}
                           title={video.title}
                           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                           allowFullScreen
                         />
+
                       </div>
+
                     </div>
+
                   ))}
+
                 </div>
+
+                {/* Link para questões do tema correspondente */}
                 <Link
                   className="va-questions-link"
                   to={`/temas?tema=${encodeURIComponent(group.slug)}`}
                 >
                   clique aqui para abrir todas as questões desse tema
                 </Link>
+
               </div>
+
             )}
+
           </section>
         );
       })}
+
     </div>
   );
 }

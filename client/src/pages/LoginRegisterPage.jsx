@@ -1,59 +1,110 @@
-import { useState, useContext, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AuthContext } from '../contexts/AuthContext';
 import { authApi } from '../services/api';
-import './LoginRegisterPage.css';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function LoginRegisterPage() {
-  const [formData, setFormData] = useState({ email: '', password: '' });
+
+  // Armazena os valores digitados nos campos de login.
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+  });
+
+  // Guarda mensagens de erro para exibição na tela.
   const [error, setError] = useState('');
+
+  // Controla o estado de carregamento durante o login.
   const [loading, setLoading] = useState(false);
-  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('pregmath_theme') === 'dark');
-  const { login, loginAsGuest } = useContext(AuthContext);
+
+  // Controla o tema claro/escuro da página.
+  const [darkMode, setDarkMode] = useState(false);
+
+  // Permite navegar entre as páginas da aplicação.
   const navigate = useNavigate();
 
-  useEffect(() => {
-    document.documentElement.dataset.theme = darkMode ? 'dark' : 'light';
-    localStorage.setItem('pregmath_theme', darkMode ? 'dark' : 'light');
-  }, [darkMode]);
+  // Obtém as funções responsáveis pelo login.
+  const { login, loginAsGuest } = useAuth();
 
+  // Atualiza automaticamente o campo alterado pelo usuário.
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    setError('');
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
+  // Executado quando o formulário é enviado.
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+
+    // Limpa mensagens de erro anteriores.
     setError('');
 
+    // Informa que o login está sendo processado.
+    setLoading(true);
+
     try {
-      const response = await authApi.login(formData.email, formData.password);
+
+      // Envia o e-mail e a senha para o backend.
+      const response = await authApi.login(
+        formData.email,
+        formData.password
+      );
+
+      // Recupera o token JWT e os dados do usuário enviados pelo servidor.
       const { token, user } = response.data;
+
+      // Salva o usuário e o token no Context e no localStorage.
       login(user, token);
+
+      // Redireciona o usuário para a página inicial.
       navigate('/');
+
     } catch (err) {
-      setError(err.response?.data?.mensagem || 'Erro ao processar requisição');
+
+      // Exibe a mensagem enviada pelo backend ou uma mensagem padrão.
+      setError(
+        err.response?.data?.mensagem ||
+        'Erro ao processar requisição'
+      );
+
     } finally {
+
+      // Finaliza o estado de carregamento, independentemente do resultado.
       setLoading(false);
+
     }
   };
 
+  // Permite acessar o sistema como visitante.
   const handleGuestLogin = () => {
+
+    // Cria um usuário visitante sem gerar JWT.
     loginAsGuest();
+
+    // Redireciona para a página inicial.
     navigate('/');
+
   };
 
   return (
     <div className="login-page">
-      {/* Topbar */}
+
+      {/* Barra superior da página */}
       <header className="login-topbar">
+
         <div className="login-brand-group">
+
+          {/* Logo da aplicação */}
           <div className="login-brand-mark">
             <span>Preg</span>
             <strong>Math</strong>
           </div>
+
+          {/* Botão para alternar entre tema claro e escuro */}
           <button
             type="button"
             className="login-theme-toggle"
@@ -63,20 +114,39 @@ export default function LoginRegisterPage() {
           >
             <span />
           </button>
+
         </div>
+
       </header>
 
-      {/* Conteúdo central */}
+      {/* Área principal da tela de login */}
       <main className="login-content">
+
         <div className="login-card">
+
           <h1>Olá, seja bem vindo!</h1>
-          <p className="login-subtitle">entre na sua conta</p>
 
-          {error && <div className="login-error">{error}</div>}
+          <p className="login-subtitle">
+            entre na sua conta
+          </p>
 
+          {/* Exibe mensagem caso o login falhe */}
+          {error && (
+            <div className="login-error">
+              {error}
+            </div>
+          )}
+
+          {/* Formulário de login */}
           <form onSubmit={handleSubmit}>
+
+            {/* Campo de e-mail */}
             <div className="login-field">
-              <span className="login-field-icon">✉</span>
+
+              <span className="login-field-icon">
+                ✉
+              </span>
+
               <input
                 type="email"
                 name="email"
@@ -86,10 +156,16 @@ export default function LoginRegisterPage() {
                 required
                 disabled={loading}
               />
+
             </div>
 
+            {/* Campo de senha */}
             <div className="login-field">
-              <span className="login-field-icon">🔑</span>
+
+              <span className="login-field-icon">
+                🔑
+              </span>
+
               <input
                 type="password"
                 name="password"
@@ -99,13 +175,22 @@ export default function LoginRegisterPage() {
                 required
                 disabled={loading}
               />
+
             </div>
 
-            <button type="submit" className="login-submit-btn" disabled={loading}>
+            {/* Botão responsável por enviar o formulário */}
+            <button
+              type="submit"
+              className="login-submit-btn"
+              disabled={loading}
+            >
+              {/* Enquanto a requisição acontece, informa ao usuário */}
               {loading ? 'Entrando...' : 'fazer login'}
             </button>
+
           </form>
 
+          {/* Login sem autenticação utilizando perfil visitante */}
           <button
             type="button"
             className="login-guest-btn"
@@ -113,14 +198,24 @@ export default function LoginRegisterPage() {
           >
             entrar como visitante
           </button>
+
         </div>
+
       </main>
 
-      {/* Footer */}
+      {/* Rodapé da aplicação */}
       <footer className="login-footer">
-        <p>© 2026 SESI Vinhedo - CE 242. Todos os direitos reservados.</p>
-        <p>Desenvolvido por alunos da Instituição SESI Vinhedo-Ce242.</p>
+
+        <p>
+          © 2026 SESI Vinhedo - CE 242. Todos os direitos reservados.
+        </p>
+
+        <p>
+          Desenvolvido por alunos da Instituição SESI Vinhedo-Ce242.
+        </p>
+
       </footer>
+
     </div>
   );
 }

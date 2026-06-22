@@ -19,18 +19,25 @@ export default function QuestionCard({ question }) {
   const [isImageModalOpen, setIsImageModalOpen] = useState(false); 
   //Estado para controlar a visibilidade do modal de imagem. Inicialmente, o modal está fechado (false).
 
+  // Recupera o nome do vestibular
+  // Aceita diferentes formatos vindos da API
   const vestibular = question.nome_V || question.nome_v || question.nome_Vestibular || question.vestibular || 'Vestibular';
+    // Recupera o tema da questão
   const tema = question.nome_T || question.nome_t || question.tema || 'Tema';
+  // Recupera o enunciado
   const enunciado = question.enunciado || question.Enunciado || question.text || 'Questão sem enunciado disponível';
+  // Recupera imagem caso exista
   const rawImage = question.imgQ || question.imgq || question.img || question.imagem;
+  // Valida se a imagem realmente possui conteúdo
   const image = typeof rawImage === 'string' && rawImage.trim() !== '' && rawImage.trim().toLowerCase() !== 'null' && rawImage.trim().toLowerCase() !== 'undefined' ? rawImage.trim() : null;
+  // Memoriza as alternativas para evitar renderizações desnecessárias
   const alternativas = useMemo(() => question.alternativas || [], [question.alternativas]);
 
+  // Sempre que uma nova questão for carregada
+  // remove a alternativa anteriormente marcada
   useEffect(() => {
     setSelectedAlt(null);
   }, [question]); 
-  //Sempre que a questão mudar, o estado da alternativa selecionada é resetado para null, garantindo que o usuário comece 
-  //sem nenhuma alternativa marcada na nova questão.
 
   useMathJax([question, selectedAlt]); 
   //Isso força o MathJax a reprocessar e "desenhar" os símbolos matemáticos na tela sempre que o usuário muda de questão ou interage com o card.
@@ -38,14 +45,17 @@ export default function QuestionCard({ question }) {
   const normalizeValidacao = (valor) => String(valor || '').trim().toLowerCase();
   const isRight = (alt) => ['s', 'sim', 'true', '1', 'correta', 'certo'].includes(normalizeValidacao(alt.validacao || alt.Validacao));
    //A validação é feita pela função helper normalizeValidacao, que converte o valor para string, remove espaços e coloca em minúsculas.
-  const getCorrectAlternative = () => alternativas.find((alt) => isRight(alt));
+  const getCorrectAlternative = () => alternativas.find((alt) => isRight(alt)); // Procura a alternativa correta
 
+   // Renderiza a caixa de feedback após responder
   const renderComment = () => {
+    // Não mostra comentário se nenhuma alternativa foi selecionada
     if (!selectedAlt) return null;
     const correct = isRight(selectedAlt);
     const selectedComment = (selectedAlt.comentario || selectedAlt.Comentario || '').trim();
     const correctAlt = getCorrectAlternative();
     const correctComment = (correctAlt?.comentario || correctAlt?.Comentario || '').trim();
+    // Define qual mensagem será exibida
     const text = selectedComment || (correct ? 'Resposta correta!' : correctComment || 'Resposta incorreta.');
 
     return (
@@ -61,11 +71,14 @@ export default function QuestionCard({ question }) {
 
   return (
     <article className="question-card">
+      {/* Cabeçalho da questão */}
       <div className="question-header">
         <span>{vestibular}</span>
         <strong>{tema}</strong>
       </div>
+       {/* Texto principal da questão */}
       <p className="question-text">{enunciado}</p>
+       {/* Imagem da questão */}
       {image && (
         <div className="question-image-container">
           <img
@@ -78,9 +91,13 @@ export default function QuestionCard({ question }) {
       )}
       <ul className="alternatives-list">
         {alternativas.map((alt, index) => {
+          // Define identificador único
           const id = alt.id_alt || alt.id || index;
+          // Verifica se a alternativa está selecionada
           const selected = selectedAlt && (selectedAlt.id_alt || selectedAlt.id || alternativas.indexOf(selectedAlt)) === id;
+          // Verifica se é a alternativa correta
           const correct = isRight(alt);
+           // Recupera texto da alternativa
           const answerText = alt.enunciado || alt.Enunciado || 'Alternativa sem texto';
           return (
             <li key={id} className="alternative-item">

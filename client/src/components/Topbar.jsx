@@ -24,9 +24,9 @@ export default function Topbar() {
   useEffect(() => {
     document.documentElement.dataset.theme = darkMode ? 'dark' : 'light'; //Define o atributo data-theme para controle de tema via CSS
     localStorage.setItem('pregmath_theme', darkMode ? 'dark' : 'light'); //Armazena a preferência do usuário no localStorage para mudanças entre sessões
-  }, [darkMode]); 
+  }, [darkMode]);
   //Grava a nova preferência de volta no localStorage. Isso garante que a escolha persista mesmo após recarregar a página.
-  
+
   const handleThemeSelect = (tipo, tema) => {
     setOpenMenu(null);
     navigate(`/temas?tipo=${encodeURIComponent(tipo)}&tema=${encodeURIComponent(themeSlugs[tema] || tema)}`);
@@ -52,6 +52,7 @@ export default function Topbar() {
           <span>Preg</span>
           <strong>Math</strong>
         </NavLink>
+        {/* Botão de alternância entre tema claro e escuro */}
         <button
           type="button"
           className="theme-toggle"
@@ -62,14 +63,16 @@ export default function Topbar() {
           <span />
         </button>
       </div>
-
+      {/* Menu principal de navegação */}
       <nav className="nav-links">
         <NavLink to="/simulado">SIMULADO ▾</NavLink>
+        {/* Geração dinâmica dos menus de vestibulares */}
         {vestibularOptions.map((tipo) => (
           <div className="dropdown" key={tipo}>
             <button type="button" className="dropdown-trigger" onClick={() => setOpenMenu(openMenu === tipo ? null : tipo)}>
               {tipo} ▾
             </button>
+            {/* Exibe temas somente quando o menu estiver aberto */}
             {openMenu === tipo && (
               <div className="dropdown-menu">
                 {themeOptions.map((tema) => (
@@ -85,6 +88,7 @@ export default function Topbar() {
       </nav>
 
       <div className="topbar-right">
+         {/* Formulário de busca de questões */}
         <form className="search-form" onSubmit={handleSearchSubmit}>
           <input
             type="text"
@@ -98,6 +102,7 @@ export default function Topbar() {
           </button>
         </form>
 
+         {/* Área de perfil exibida apenas quando existe usuário */}
         {user && (
           <div className="profile-section">
             <button
@@ -108,6 +113,7 @@ export default function Topbar() {
             >
               👤 {user.name || user.email}
             </button>
+            {/* Menu do perfil */}
             {profileOpen && (
               <div className="profile-menu">
                 <div className="profile-info">

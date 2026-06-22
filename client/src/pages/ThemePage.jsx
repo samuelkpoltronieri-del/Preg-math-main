@@ -70,6 +70,7 @@ export default function ThemePage() {
   const tipo = searchParams.get('tipo');
   const detail = themeDetails[tema] || themeDetails['REGRA DE 3'];
 
+  // Sempre que o tema mudar volta para a primeira página
   useEffect(() => {
     setPage(1);
   }, [tema, tipo]);
@@ -78,6 +79,7 @@ export default function ThemePage() {
     async function loadThemeItems() {
       setLoading(true);
       try {
+        // Define endpoint dependendo da existência de vestibular
         const endpoint = tipo
           ? `/busca/questoes-tema/vestibular/${encodeURIComponent(tipo)}/tema/${encodeURIComponent(detail.dbName)}`
           : `/busca/questoes-tema/tema/${encodeURIComponent(detail.dbName)}`;
@@ -94,6 +96,7 @@ export default function ThemePage() {
     loadThemeItems();
   }, [detail.dbName, tipo, page, limit]);
 
+  // Recupera componente teórico correspondente ao tema
   const GuideComponent = themeGuideComponents[tema];
 
   return (
@@ -134,6 +137,7 @@ export default function ThemePage() {
           <p className="status-text">Carregando questões do tema...</p>
         ) : (
           <>
+           {/* Caso nenhuma questão seja encontrada */}
             {items.length === 0 && <p className="status-text">Nenhuma questão encontrada para esta página.</p>}
             {items.map((item, index) => (
               <QuestionCard key={`${item.idq || item.idQ || index}-${page}`} question={item} />
