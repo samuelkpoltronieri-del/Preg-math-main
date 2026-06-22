@@ -14,6 +14,12 @@
 
 // Importa o Model de busca, que contém as funções que executam
 // as queries SQL no banco de dados PostgreSQL.
+// ─────────────────────────────────────────────────────────────────────────────
+// Q1 | Por que usar require() e guardar em QuestaoTema?
+// R:  O require retorna o objeto definido no module.exports de buscaModel.js
+//     (linhas 224-233 daquele arquivo). QuestaoTema é só um apelido (alias).
+//     console.log(QuestaoTema) mostraria: { listarTodos: [Function], ... }
+// ─────────────────────────────────────────────────────────────────────────────
 const QuestaoTema = require('../models/buscaModel');
 
 // ============================================================
@@ -23,16 +29,37 @@ const QuestaoTema = require('../models/buscaModel');
 // QUERY PARAMS: ?page=1&limit=10
 // ============================================================
 async function listarTodos(req, res) {
-    // Extrai os parâmetros de paginação da query string da URL.
-    // Exemplo: /questoes-tema?page=2&limit=5
+    // ─────────────────────────────────────────────────────────────────────────
+    // Q2 | O que é { page, limit } = req.query? O que acontece sem parâmetros?
+    // R:  É desestruturação de objeto: extrai req.query.page e req.query.limit.
+    //     req.query é criado pelo Express com os pares chave=valor após o ?
+    //     Sem parâmetros: req.query={}, page=undefined, limit=undefined.
+    //     Isso não quebra: buscaModel.js (linha 64) usa parseInt(limit)||10
+    //     para aplicar valores padrão (10 itens, página 1) quando undefined.
+    // ─────────────────────────────────────────────────────────────────────────
     const { page, limit } = req.query;
     try {
-        // Chama o Model para buscar os dados no banco com paginação
-        const dados = await QuestaoTema.listarTodos(page, limit);
-        // Retorna os dados com status 200 (OK) em formato JSON
+        // O alias QuestaoTema é usado aqui para acessar a função do Model
+        const dados = await QuestaoTema.listarTodos(page, limit); // ← Q1: QuestaoTema.listarTodos = função exportada pelo Model
+        // ─────────────────────────────────────────────────────────────────────
+        // Q3 | Por que return antes de res.status(200).json(dados)?
+        // R:  O return faz duas coisas: envia a resposta E encerra a função.
+        //     Sem ele, se houvesse outro res.json() abaixo, o Node tentaria
+        //     enviar uma segunda resposta, causando: "Cannot set headers after
+        //     they are sent to the client". O encadeamento .status().json() é
+        //     "method chaining": .status() retorna o próprio res, permitindo
+        //     chamar .json() em seguida para definir o código HTTP e o corpo.
+        // ─────────────────────────────────────────────────────────────────────
         return res.status(200).json(dados);
     } catch (error) {
-        // Em caso de erro no banco, retorna status 500 com a mensagem do erro
+        // ─────────────────────────────────────────────────────────────────────
+        // Q4 | Por que error.message e não error diretamente?
+        // R:  error é o objeto completo (com .stack, .code, .name).
+        //     Passar error no JSON resulta em {} pois Error não serializa.
+        //     error.message é o texto descritivo (ex: "relation does not exist").
+        //     ATENÇÃO: em produção, isso pode vazar detalhes do banco. O ideal
+        //     seria logar internamente e retornar uma mensagem genérica ao cliente.
+        // ─────────────────────────────────────────────────────────────────────
         return res.status(500).json({ error: error.message });
     }
 }
@@ -46,16 +73,23 @@ async function listarTodos(req, res) {
 // QUERY PARAMS: ?page=1&limit=10
 // ============================================================
 async function listarPorTema(req, res) {
-    // Extrai o tema da URL (parâmetro de rota dinâmico)
+    // ─────────────────────────────────────────────────────────────────────────
+    // Q5 | Diferença entre req.params e req.query?
+    // R:  req.params → segmentos dinâmicos da ROTA (definidos com : no Route,
+    //     ex: /filtrar/:tema faz req.params = { tema: 'Algebra' }).
+    //     req.query → pares chave=valor após o ? na URL
+    //     (ex: ?page=2 faz req.query = { page: '2' }).
+    //     Para /busca/questoes-tema/filtrar/Algebra?page=2:
+    //       req.params = { tema: 'Algebra' }
+    //       req.query  = { page: '2' }
+    //     Todos os valores chegam como STRING — por isso buscaModel.js usa parseInt().
+    // ─────────────────────────────────────────────────────────────────────────
     const { tema } = req.params;
-    // Extrai os parâmetros de paginação da query string
     const { page, limit } = req.query;
     try {
-        // Validação: o tema é obrigatório para esta rota
         if (!tema) {
             return res.status(400).json({ message: 'O parâmetro "tema" é obrigatório.' });
         }
-        // Busca no banco as questões que correspondem ao tema informado
         const dados = await QuestaoTema.listarPorTema(tema, page, limit);
         return res.status(200).json(dados);
     } catch (error) {
@@ -71,15 +105,12 @@ async function listarPorTema(req, res) {
 // QUERY PARAMS: ?page=1&limit=10
 // ============================================================
 async function listarPorVestibular(req, res) {
-    // Extrai o nome do vestibular da URL
     const { vestibular } = req.params;
     const { page, limit } = req.query;
     try {
-        // Validação: o vestibular é obrigatório
         if (!vestibular) {
             return res.status(400).json({ message: 'O parâmetro "vestibular" é obrigatório.' });
         }
-        // Busca no banco as questões do vestibular informado
         const dados = await QuestaoTema.listarPorVestibular(vestibular, page, limit);
         return res.status(200).json(dados);
     } catch (error) {
@@ -96,15 +127,20 @@ async function listarPorVestibular(req, res) {
 // QUERY PARAMS: ?page=1&limit=10
 // ============================================================
 async function listarPorVestibularTema(req, res) {
-    // Extrai ambos os parâmetros de rota da URL
     const { vestibular, tema } = req.params;
     const { page, limit } = req.query;
     try {
-        // Ambos os parâmetros são obrigatórios para esta rota
+        // ─────────────────────────────────────────────────────────────────────
+        // Q6 | Por que || e não && na validação dos dois parâmetros?
+        // R:  || (OU) retorna 400 se QUALQUER UM dos dois estiver faltando.
+        //     Com && (E), só erraria se os DOIS faltassem — faltando apenas um,
+        //     o código passaria e enviaria undefined ao banco, causando erro 500.
+        //     || é correto porque ambos os parâmetros são obrigatórios para
+        //     esta rota. Sem vestibular OU sem tema → a busca não faz sentido.
+        // ─────────────────────────────────────────────────────────────────────
         if (!vestibular || !tema) {
             return res.status(400).json({ message: 'Os parâmetros "vestibular" e "tema" são obrigatórios.' });
         }
-        // Busca no banco com o duplo filtro: vestibular + tema
         const dados = await QuestaoTema.listarPorVestibularTema(vestibular, tema, page, limit);
         return res.status(200).json(dados);
     } catch (error) {
@@ -120,11 +156,18 @@ async function listarPorVestibularTema(req, res) {
 // QUERY PARAMS: ?quantidade=N (padrão: 1)
 // ============================================================
 async function listarAleatorias(req, res) {
-    // Converte o parâmetro 'quantidade' para inteiro.
-    // Se não informado ou inválido, usa 1 como padrão.
+    // ─────────────────────────────────────────────────────────────────────────
+    // Q7 | Por que parseInt() aqui se o Model já faz parseInt() de novo?
+    // R:  É um parseInt() duplo — redundância inofensiva. O Controller pré-
+    //     converte para passar um valor mais limpo. parseInt(parseInt('5'))=5.
+    //     Comportamento do parseInt():
+    //       '5'     → 5     (inteiro direto)
+    //       '3.7'   → 3     (TRUNCA, não arredonda!)
+    //       'cinco' → NaN   (texto → NaN, e NaN || 1 assume padrão 1)
+    //       ''      → NaN   (idem)
+    // ─────────────────────────────────────────────────────────────────────────
     const quantidade = parseInt(req.query.quantidade) || 1;
     try {
-        // O Model usa ORDER BY RANDOM() no SQL para embaralhar as questões
         const dados = await QuestaoTema.listarAleatorias(quantidade);
         return res.status(200).json(dados);
     } catch (error) {
@@ -140,16 +183,13 @@ async function listarAleatorias(req, res) {
 // QUERY PARAMS: ?quantidade=N (padrão: 1)
 // ============================================================
 async function listarAleatoriasPorVestibular(req, res) {
-    // Extrai o vestibular da rota e a quantidade desejada da query string
     const { vestibular } = req.params;
     const quantidade = parseInt(req.query.quantidade) || 1;
 
     try {
-        // Validação: o vestibular é obrigatório para filtrar as aleatórias
         if (!vestibular) {
             return res.status(400).json({ message: 'O parâmetro "vestibular" é obrigatório.' });
         }
-        // Busca N questões aleatórias do vestibular informado
         const dados = await QuestaoTema.listarAleatoriasPorVestibular(vestibular, quantidade);
         return res.status(200).json(dados);
     } catch (error) {
@@ -166,10 +206,8 @@ async function listarAleatoriasPorVestibular(req, res) {
 // URL PARAMS: :quantidade
 // ============================================================
 async function listarQuantidade(req, res) {
-    // Aqui a quantidade vem como parâmetro de rota (:quantidade), não query string
     const quantidade = parseInt(req.params.quantidade) || 1;
     try {
-        // Reutiliza o mesmo método do Model que busca questões aleatórias
         const dados = await QuestaoTema.listarAleatorias(quantidade);
         return res.status(200).json(dados);
     } catch (error) {
@@ -185,20 +223,33 @@ async function listarQuantidade(req, res) {
 // URL PARAMS: :id (identificador numérico da questão)
 // ============================================================
 async function listarPorId(req, res) {
-    // Extrai o ID da questão dos parâmetros de rota
     const { id } = req.params;
 
-    // Validação rápida antes de ir ao banco: ID deve ser informado
+    // ─────────────────────────────────────────────────────────────────────────
+    // Q8 | !id não verifica se o id é número válido. O que acontece com /id/abc?
+    // R:  !id só detecta ausência (undefined, null, ''). 'abc' passa no !id.
+    //     O Model então executa WHERE q.idQ = 'abc', e o PostgreSQL tenta
+    //     converter 'abc' para INTEGER → falha. O catch retorna erro 500,
+    //     quando deveria ser 400. O fix correto seria:
+    //       const id = parseInt(req.params.id);
+    //       if (isNaN(id) || id <= 0) return res.status(400).json(...)
+    // ─────────────────────────────────────────────────────────────────────────
     if (!id) return res.status(400).json({ message: 'O parâmetro "id" é obrigatório.' });
 
     try {
-        // Busca a questão pelo ID no banco de dados
         const dado = await QuestaoTema.listarPorId(id);
 
-        // Se nenhuma questão foi encontrada com esse ID, retorna 404 (Not Found)
+        // ─────────────────────────────────────────────────────────────────────
+        // Q9 | O que o Model retorna quando a questão não existe? Por que !dado?
+        // R:  buscaModel.js (linha 217) retorna: result.rows[0] || null
+        //     Se não existe: rows[0] = undefined → undefined || null = null.
+        //     !null = true → entra no if → retorna 404. Correto!
+        //     Se retornasse [] (array vazio): ![] = false (array é TRUTHY!)
+        //     → o if não dispararia → retornaria 200 OK vazio. Por isso
+        //     o Model usa null e não [] para indicar "não encontrado".
+        // ─────────────────────────────────────────────────────────────────────
         if (!dado) return res.status(404).json({ message: 'Questão não encontrada.' });
 
-        // Retorna a questão encontrada com status 200
         return res.status(200).json(dado);
     } catch (error) {
         return res.status(500).json({ error: error.message });
@@ -214,18 +265,14 @@ async function listarPorId(req, res) {
 // QUERY PARAMS: ?palavra=texto (obrigatório), ?page=1, ?limit=10
 // ============================================================
 async function buscarPorPalavra(req, res) {
-    // Extrai a palavra de busca da query string
     const { palavra } = req.query;
 
-    // Validação: a palavra é obrigatória para realizar a busca
     if (!palavra) {
         return res.status(400).json({ message: 'O parâmetro de query "palavra" é obrigatório.' });
     }
 
-    // Extrai os parâmetros de paginação da query string
     const { page, limit } = req.query;
     try {
-        // Chama o Model com a palavra-chave (o Model adiciona os % para o ILIKE do SQL)
         const dados = await QuestaoTema.buscarPorPalavra(palavra, page, limit);
         return res.status(200).json(dados);
     } catch (error) {
