@@ -1,0 +1,23 @@
+.theme-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 1rem;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.theme-card:hover,
+.theme-card:focus {
+  transform: translateY(-3px);
+  border-color: #ffa000;
+}
+
+.theme-card-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
